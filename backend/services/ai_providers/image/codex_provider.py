@@ -17,7 +17,6 @@ from typing import Optional, List
 
 import requests as http_requests
 from PIL import Image
-from requests.exceptions import ChunkedEncodingError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 from .base import ImageProvider
@@ -39,7 +38,7 @@ def _is_retryable_http_error(exc: BaseException) -> bool:
         http_requests.exceptions.SSLError,
         http_requests.exceptions.ConnectionError,
         http_requests.exceptions.Timeout,
-        ChunkedEncodingError,
+        http_requests.exceptions.ChunkedEncodingError,
     )):
         return True
     return False
