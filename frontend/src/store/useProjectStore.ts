@@ -965,10 +965,10 @@ const debouncedUpdatePage = debounce(
 
   // 生成单页图片（用于预览页的手动重新生成）
   generatePageImage: async (pageId: string, forceRegenerate: boolean = false) => {
-    const { currentProject, pageGeneratingTasks } = get();
+    const { currentProject } = get();
     if (!currentProject) return;
 
-    if (pageGeneratingTasks[pageId]) {
+    if (get().pageGeneratingTasks[pageId]) {
       devLog(`[单页生成] 页面 ${pageId} 正在生成中，跳过重复请求`);
       return;
     }
@@ -981,12 +981,12 @@ const debouncedUpdatePage = debounce(
 
       if (taskId) {
         devLog(`[单页生成] 收到 task_id: ${taskId}，开始轮询页面 ${pageId}`);
-        set({
+        set((state) => ({
           pageGeneratingTasks: {
-            ...pageGeneratingTasks,
+            ...state.pageGeneratingTasks,
             [pageId]: taskId,
           },
-        });
+        }));
 
         await get().syncProject();
         get().pollImageTask(taskId, [pageId]);
