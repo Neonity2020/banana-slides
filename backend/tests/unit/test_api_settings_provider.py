@@ -123,3 +123,53 @@ def test_codex_401_settings_test_disconnects_oauth_and_reports_state(client, app
     assert data['data']['status'] == 'FAILED'
     assert data['data']['openai_oauth_disconnected'] is True
     assert '重新登录 OpenAI' in data['data']['error']
+
+
+def test_unrelated_401_settings_test_does_not_disconnect_codex_oauth(client, app):
+    """A non-Codex service test should not clear OAuth just because Codex is configured elsewhere."""
+    with app.app_context():
+        from models import Settings, Task, db
+
+        settings = Settings.get_settings()
+        settings.openai_oauth_access_token = 'still-valid-access-token'
+        settings.openai_oauth_refresh_token = 'still-valid-refresh-token'
+        settings.openai_oauth_account_id = 'user@example.com'
+        task = Task(
+            project_id='settings-test',
+            task_type='TEST_BAIDU_OCR',
+            status='PENDING',
+        )
+        db.session.add(task)
+        db.session.commit()
+        task_id = task.id
+
+        response = requests.Response()
+        response.status_code = 401
+        error = requests.exceptions.HTTPError(
+            '401 Client Error: Unauthorized for url: https://example.com/ocr',
+            response=response,
+        )
+
+        def fail_with_unrelated_401():
+            raise error
+
+        with patch.dict(settings_controller.TEST_FUNCTIONS, {'baidu-ocr': fail_with_unrelated_401}):
+            settings_controller._run_test_async(
+                task_id,
+                'baidu-ocr',
+                {'text_model_source': 'codex'},
+                app,
+            )
+
+        db.session.expire_all()
+        settings = Settings.get_settings()
+        assert settings.openai_oauth_access_token == 'still-valid-access-token'
+        assert settings.openai_oauth_refresh_token == 'still-valid-refresh-token'
+        assert settings.openai_oauth_account_id == 'user@example.com'
+
+    status_response = client.get(f'/api/settings/tests/{task_id}/status')
+    assert status_response.status_code == 200
+    data = status_response.get_json()
+    assert data['success'] is True
+    assert data['data']['status'] == 'FAILED'
+    assert 'openai_oauth_disconnected' not in data['data']

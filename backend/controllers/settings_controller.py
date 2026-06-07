@@ -1040,7 +1040,7 @@ TEST_FUNCTIONS = {
 }
 
 
-def _is_codex_oauth_unauthorized(error: Exception, test_settings: dict) -> bool:
+def _is_codex_oauth_unauthorized(error: Exception, test_name: str, test_settings: dict) -> bool:
     """Return True when a settings test failed because the Codex OAuth token is invalid."""
     response = getattr(error, "response", None)
     status_code = getattr(response, "status_code", None)
@@ -1053,15 +1053,18 @@ def _is_codex_oauth_unauthorized(error: Exception, test_settings: dict) -> bool:
     if not unauthorized:
         return False
 
-    configured_sources = [
-        test_settings.get("ai_provider_format"),
-        test_settings.get("text_model_source"),
-        test_settings.get("image_model_source"),
-        test_settings.get("image_caption_model_source"),
-    ]
-    is_codex_configured = any(str(source).lower() == "codex" for source in configured_sources if source)
+    test_source_keys = {
+        "text-model": "text_model_source",
+        "image-model": "image_model_source",
+        "caption-model": "image_caption_model_source",
+    }
+    source_key = test_source_keys.get(test_name)
+    source = test_settings.get(source_key) if source_key else None
+    if source is None:
+        source = test_settings.get("ai_provider_format")
+    is_codex_test = str(source).lower() == "codex" if source else False
     is_codex_endpoint = "chatgpt.com/backend-api/codex" in error_text or "/codex/responses" in error_text
-    return is_codex_configured or is_codex_endpoint
+    return is_codex_test or is_codex_endpoint
 
 
 def _disconnect_expired_openai_oauth() -> None:
@@ -1118,7 +1121,7 @@ def _run_test_async(task_id: str, test_name: str, test_settings: dict, app):
             task = Task.query.get(task_id)
             if task:
                 progress = {}
-                if _is_codex_oauth_unauthorized(e, test_settings):
+                if _is_codex_oauth_unauthorized(e, test_name, test_settings):
                     _disconnect_expired_openai_oauth()
                     error_msg = "Codex 登录已过期或无效，已断开 OpenAI 账号连接。请重新登录 OpenAI 后再测试。"
                     progress = {
