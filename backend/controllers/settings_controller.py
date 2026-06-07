@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -1047,7 +1048,7 @@ def _is_codex_oauth_unauthorized(error: Exception, test_name: str, test_settings
     error_text = str(error).lower()
     unauthorized = (
         status_code == 401
-        or "401" in error_text
+        or bool(re.search(r"\b401\b", error_text))
         or "unauthorized" in error_text
     )
     if not unauthorized:

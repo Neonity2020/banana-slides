@@ -151,8 +151,8 @@ class Settings(db.Model):
             'elevenlabs_enabled': self.elevenlabs_enabled,
             'elevenlabs_api_key_length': len(elevenlabs_api_key) if elevenlabs_api_key else 0,
             'elevenlabs_voice_id': self.elevenlabs_voice_id or '',
-            'openai_oauth_connected': bool(self.openai_oauth_access_token),
-            'openai_oauth_account_id': self.openai_oauth_account_id,
+            'openai_oauth_connected': self.is_openai_oauth_connected(),
+            'openai_oauth_account_id': self.openai_oauth_account_id if self.is_openai_oauth_connected() else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -186,10 +186,18 @@ class Settings(db.Model):
             if self.openai_oauth_expires_at < now:
                 if self.openai_oauth_refresh_token:
                     return self._refresh_openai_oauth()
-                self.clear_openai_oauth()
-                db.session.commit()
                 return None
         return self.openai_oauth_access_token
+
+    def is_openai_oauth_connected(self):
+        """Return whether stored OpenAI OAuth credentials can still be presented as connected."""
+        if not self.openai_oauth_access_token:
+            return False
+        if self.openai_oauth_expires_at:
+            now = datetime.utcnow()
+            if self.openai_oauth_expires_at < now and not self.openai_oauth_refresh_token:
+                return False
+        return True
 
     def clear_openai_oauth(self):
         """Clear stored OpenAI OAuth credentials."""

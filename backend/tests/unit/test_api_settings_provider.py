@@ -173,3 +173,44 @@ def test_unrelated_401_settings_test_does_not_disconnect_codex_oauth(client, app
     assert data['success'] is True
     assert data['data']['status'] == 'FAILED'
     assert 'openai_oauth_disconnected' not in data['data']
+
+
+def test_codex_test_error_text_with_4010_does_not_disconnect_oauth(client, app):
+    """A non-401 number in error text should not be treated as an OAuth 401."""
+    with app.app_context():
+        from models import Settings, Task, db
+
+        settings = Settings.get_settings()
+        settings.openai_oauth_access_token = 'still-valid-access-token'
+        settings.openai_oauth_refresh_token = 'still-valid-refresh-token'
+        settings.openai_oauth_account_id = 'user@example.com'
+        task = Task(
+            project_id='settings-test',
+            task_type='TEST_TEXT_MODEL',
+            status='PENDING',
+        )
+        db.session.add(task)
+        db.session.commit()
+        task_id = task.id
+
+        def fail_with_port_number():
+            raise ValueError('Connection failed to http://localhost:4010/codex-proxy')
+
+        with patch.dict(settings_controller.TEST_FUNCTIONS, {'text-model': fail_with_port_number}):
+            settings_controller._run_test_async(
+                task_id,
+                'text-model',
+                {'text_model_source': 'codex'},
+                app,
+            )
+
+        db.session.expire_all()
+        settings = Settings.get_settings()
+        assert settings.openai_oauth_access_token == 'still-valid-access-token'
+        assert settings.openai_oauth_refresh_token == 'still-valid-refresh-token'
+        assert settings.openai_oauth_account_id == 'user@example.com'
+
+    status_response = client.get(f'/api/settings/tests/{task_id}/status')
+    data = status_response.get_json()
+    assert data['data']['status'] == 'FAILED'
+    assert 'openai_oauth_disconnected' not in data['data']
