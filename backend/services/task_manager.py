@@ -174,7 +174,7 @@ def generate_image_until_quality_passes(
         reason = _format_quality_review_failure(last_review)
         raise ImageQualityControlError(f"图片质量控制未通过：{reason}。请调整页面描述或提示词后重试。")
     if last_error:
-        raise ImageQualityControlError(f"图片质量控制失败：{last_error}。请调整页面描述或提示词后重试。")
+        raise ImageQualityControlError(f"图片质量控制失败：{last_error}。请调整页面描述或提示词后重试。") from last_error
     raise ImageQualityControlError("图片质量控制未通过。请调整页面描述或提示词后重试。")
 from pathlib import Path
 from services.pdf_service import split_pdf_to_pages

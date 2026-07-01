@@ -112,7 +112,7 @@ def test_image_quality_control_reports_latest_generation_error(monkeypatch):
             return _image('red')
         raise RuntimeError('provider timeout')
 
-    with pytest.raises(ImageQualityControlError, match='provider timeout'):
+    with pytest.raises(ImageQualityControlError, match='provider timeout') as exc_info:
         generate_image_until_quality_passes(
             generate,
             ai_service,
@@ -124,6 +124,7 @@ def test_image_quality_control_reports_latest_generation_error(monkeypatch):
 
     assert len(attempts) == 2
     assert len(ai_service.calls) == 1
+    assert isinstance(exc_info.value.__cause__, RuntimeError)
 
 
 def test_image_quality_control_disabled_keeps_current_single_attempt_behavior():
@@ -172,6 +173,31 @@ def test_quality_review_string_false_is_not_treated_as_pass(monkeypatch, tmp_pat
 
     assert result['passed'] is False
     assert result['issues'] == ['garbled text']
+
+
+def test_quality_review_accepts_list_wrapped_numeric_passed(monkeypatch, tmp_path):
+    image_path = tmp_path / 'slide.png'
+    _image().save(image_path)
+    service = AIService.__new__(AIService)
+
+    monkeypatch.setattr(
+        service,
+        'generate_json_with_image',
+        lambda *_args, **_kwargs: [{
+            'passed': 1,
+            'issues': [],
+            'reason': 'Looks good',
+        }],
+    )
+
+    result = service.review_generated_slide_image(
+        str(image_path),
+        generation_prompt='prompt',
+        page_desc='description',
+    )
+
+    assert result['passed'] is True
+    assert result['reason'] == 'Looks good'
 
 
 @pytest.fixture(autouse=True)

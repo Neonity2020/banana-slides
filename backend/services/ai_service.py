@@ -922,14 +922,18 @@ class AIService:
         """).strip()
 
         result = self.generate_json_with_image(prompt, image_path)
+        if isinstance(result, list) and result and isinstance(result[0], dict):
+            result = result[0]
         if not isinstance(result, dict):
             raise ValueError("Image quality review returned a non-object result")
 
         raw_passed = result.get('passed')
         if isinstance(raw_passed, bool):
             passed = raw_passed
+        elif isinstance(raw_passed, (int, float)):
+            passed = bool(raw_passed)
         elif isinstance(raw_passed, str):
-            passed = raw_passed.strip().lower() in ('true', 'yes', 'pass', 'passed')
+            passed = raw_passed.strip().lower() in ('true', 'yes', 'pass', 'passed', '1')
         else:
             passed = False
         issues = result.get('issues') or []
