@@ -117,6 +117,7 @@ const previewI18n = {
       generationFailed: "生成失败",
       qualityControl: "质量控制",
       qualityControlDesc: "生成后先质检，通过才保存版本",
+      qualityControlTooltip: "生成每张图片后，会先把图片和实际生图提示词交给多模态模型审核；如果发现乱码文字、明显低质或与提示词偏离，会丢弃本次结果并自动重试，最多 3 次。只有审核通过的图片才会保存为版本。",
       qualityControlOn: "已开启",
       qualityControlOff: "已关闭",
       qualityControlSaved: "质量控制设置已保存",
@@ -245,6 +246,7 @@ const previewI18n = {
       generationFailed: "Generation failed",
       qualityControl: "Quality Control",
       qualityControlDesc: "Review after generation; save only passing versions",
+      qualityControlTooltip: "After each image is generated, Banana Slides sends the image and the actual generation prompt to a multimodal reviewer. If it finds garbled text, obvious low quality, or a clear prompt mismatch, the result is discarded and retried up to 3 times. Only images that pass are saved as versions.",
       qualityControlOn: "On",
       qualityControlOff: "Off",
       qualityControlSaved: "Quality control setting saved",
@@ -285,7 +287,6 @@ import {
   FileText,
   Loader2,
   Info,
-  ShieldCheck,
 } from 'lucide-react';
 import { Button, Loading, Modal, Textarea, useToast, useConfirm, MaterialSelector, ProjectSettingsModal, ExportTasksPanel, TextStyleSelector } from '@/components/shared';
 import { MaterialGeneratorModal } from '@/components/shared/MaterialGeneratorModal';
@@ -2499,9 +2500,8 @@ export const SlidePreview: React.FC = () => {
                   <div className="flex items-center gap-1.5 md:gap-2 w-full sm:w-auto justify-center">
                     <div
                       className="flex items-center gap-2 px-1.5 py-1"
-                      title={`${imageQualityControlEnabled ? t('preview.qualityControlOn') : t('preview.qualityControlOff')} · ${t('preview.qualityControlDesc')}`}
+                      title={`${imageQualityControlEnabled ? t('preview.qualityControlOn') : t('preview.qualityControlOff')} · ${t('preview.qualityControlTooltip')}`}
                     >
-                      <ShieldCheck size={15} className="flex-shrink-0 text-banana-600 dark:text-banana-300" />
                       <span className="hidden md:inline text-xs font-medium text-gray-700 dark:text-foreground-secondary whitespace-nowrap">
                         {t('preview.qualityControl')}
                       </span>

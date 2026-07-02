@@ -135,6 +135,7 @@ test.describe('image quality control setting', () => {
     await page.goto(`/project/${projectId}/preview`);
     await expect(page.locator('aside').getByRole('switch', { name: /质量控制|Quality Control/ })).toHaveCount(0);
     const qualitySwitch = page.locator('main').getByRole('switch', { name: /质量控制|Quality Control/ });
+    await expect(page.locator('main').getByTitle(/多模态模型|multimodal reviewer/)).toBeVisible();
     await expect(qualitySwitch).toHaveAttribute('aria-checked', 'false');
     await qualitySwitch.click();
 
