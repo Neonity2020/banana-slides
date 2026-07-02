@@ -883,22 +883,14 @@ class AIService:
         page_index: Optional[int] = None,
     ) -> Dict:
         """Review a generated slide image before it is saved as a version."""
-        page_outline = page_outline or {}
-        outline_title = page_outline.get('title') or ''
-        outline_points = page_outline.get('points') or []
-        if isinstance(outline_points, list):
-            outline_points_text = '\n'.join(f"- {point}" for point in outline_points)
-        else:
-            outline_points_text = str(outline_points)
-
         prompt = dedent(f"""
         You are a strict quality-control reviewer for AI-generated presentation slide images.
-        Inspect the provided image against the intended slide description and generation prompt.
+        Inspect the provided image against the generation prompt used to create it.
 
         Reject the image if any of these problems are clearly present:
         1. Garbled, unreadable, nonsensical, or visibly corrupted text inside the slide image.
         2. Low-quality illustration or rendering, including obvious artifacts, malformed layouts, blurry key content, or amateur-looking visual style.
-        3. The visual content, style, layout, or key objects are substantially inconsistent with the user's description or prompt.
+        3. The visual content, style, layout, or key objects are substantially inconsistent with the generation prompt.
 
         Accept the image if minor imperfections exist but it is usable as a presentation slide and broadly matches the request.
 
@@ -910,12 +902,6 @@ class AIService:
         }}
 
         Page number: {page_index or ''}
-        Outline title: {outline_title}
-        Outline points:
-        {outline_points_text}
-
-        Page description:
-        {page_desc}
 
         Generation prompt:
         {generation_prompt}

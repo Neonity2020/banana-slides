@@ -200,6 +200,34 @@ def test_quality_review_accepts_list_wrapped_numeric_passed(monkeypatch, tmp_pat
     assert result['reason'] == 'Looks good'
 
 
+def test_quality_review_prompt_uses_generation_prompt_without_duplicate_context(monkeypatch, tmp_path):
+    image_path = tmp_path / 'slide.png'
+    _image().save(image_path)
+    service = AIService.__new__(AIService)
+    captured = {}
+
+    def fake_generate_json_with_image(prompt, _image_path):
+        captured['prompt'] = prompt
+        return {'passed': True, 'issues': [], 'reason': 'Looks good'}
+
+    monkeypatch.setattr(service, 'generate_json_with_image', fake_generate_json_with_image)
+
+    service.review_generated_slide_image(
+        str(image_path),
+        generation_prompt='FULL GENERATED IMAGE PROMPT',
+        page_desc='DUPLICATE PAGE DESCRIPTION',
+        page_outline={'title': 'DUPLICATE OUTLINE TITLE', 'points': ['DUPLICATE POINT']},
+    )
+
+    assert 'Generation prompt:' in captured['prompt']
+    assert 'FULL GENERATED IMAGE PROMPT' in captured['prompt']
+    assert 'Page description:' not in captured['prompt']
+    assert 'DUPLICATE PAGE DESCRIPTION' not in captured['prompt']
+    assert 'Outline title:' not in captured['prompt']
+    assert 'DUPLICATE OUTLINE TITLE' not in captured['prompt']
+    assert 'DUPLICATE POINT' not in captured['prompt']
+
+
 @pytest.fixture(autouse=True)
 def clean_settings(client):
     yield
