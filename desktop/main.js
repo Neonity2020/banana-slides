@@ -25,6 +25,21 @@ function getSmokeQuitDelayMs() {
   return Number.isFinite(delay) && delay >= 0 ? delay : 10000;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForSmokeCaptureReady(webContents) {
+  if (!webContents || webContents.isDestroyed()) return;
+  if (webContents.isLoadingMainFrame()) {
+    await Promise.race([
+      new Promise((resolve) => webContents.once('did-stop-loading', resolve)),
+      sleep(10000),
+    ]);
+  }
+  await sleep(Number(process.env.BANANA_DESKTOP_SMOKE_CAPTURE_DELAY_MS || 1500));
+}
+
 async function writeSmokeResult(extra = {}) {
   if (!isSmokeMode()) return;
 
@@ -45,6 +60,7 @@ async function writeSmokeResult(extra = {}) {
 
   try {
     if (screenshotPath && mainWindow && !mainWindow.isDestroyed()) {
+      await waitForSmokeCaptureReady(mainWindow.webContents);
       const image = await mainWindow.webContents.capturePage();
       fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
       fs.writeFileSync(screenshotPath, image.toPNG());
