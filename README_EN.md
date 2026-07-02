@@ -72,7 +72,7 @@ Have you ever found yourself in this predicament: your presentation is due tomor
 We long to quickly create presentations that are both professional and well-designed. While traditional AI PPT generation apps generally satisfy the need for "speed," they still suffer from the following issues:
 
 - 1️⃣ Only preset templates are available, making it impossible to flexibly adjust the style
-- 2️⃣ Low degree of freedom, making multi-round revisions difficult 
+- 2️⃣ Low degree of freedom, making multi-round revisions difficult
 - 3️⃣ Final products look similar, with severe homogenization
 - 4️⃣ Low-quality assets that lack specificity
 - 5️⃣ Disjointed text-image layouts with poor design aesthetics
@@ -163,9 +163,9 @@ No longer restricted by complex menu buttons—issue modification commands direc
 <br>
 
 **🌟 Comparison with NotebookLM Slide Deck features**
-| Feature | NotebookLM | This Project | 
+| Feature | NotebookLM | This Project |
 | --- | --- | --- |
-| Max Pages | 15 pages | **Unlimited** | 
+| Max Pages | 15 pages | **Unlimited** |
 | Re-editing | Prompt modification | **Selection Editing + Voice Editing** |
 | Adding Materials | Cannot add after generation | **Add freely after generation** |
 | Export Formats | Supports exporting to PDF, (non-editable image) pptx | **Export to PDF, (Image or Editable) pptx, presentation video** |
@@ -587,7 +587,7 @@ For any questions or cooperation inquiries, please contact: davidyang042@gmail.c
 </div>
 
 <!-- Note: Use this version for the English README: -->
-<!-- 
+<!--
 <div align="center">
 <a href="英文链接">
     <img src="./assets/byteplus.png" alt="BytePlus" width="150"/ >

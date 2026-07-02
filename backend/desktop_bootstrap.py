@@ -54,6 +54,7 @@ def repair_desktop_settings_schema(db):
             'outline_requirements': 'TEXT',
             'description_requirements': 'TEXT',
             'template_style': 'TEXT',
+            'template_mode': "VARCHAR(20) DEFAULT 'single'",
             'export_extractor_method': "VARCHAR(50) DEFAULT 'hybrid'",
             'export_inpaint_method': "VARCHAR(50) DEFAULT 'hybrid'",
             'export_allow_partial': 'BOOLEAN DEFAULT 0',
@@ -63,6 +64,11 @@ def repair_desktop_settings_schema(db):
         'pages': {
             'cached_image_path': 'VARCHAR(500)',
             'narration_text': 'TEXT',
+            'template_asset_id': 'VARCHAR(36)',
+            'template_style_text': 'TEXT',
+            'template_selection_source': 'VARCHAR(20)',
+            'template_match_reason': 'TEXT',
+            'template_match_confidence': 'FLOAT',
         },
         'user_templates': {
             'thumb_path': 'VARCHAR(500)',

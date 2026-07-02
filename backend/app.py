@@ -35,7 +35,7 @@ from controllers.material_controller import material_bp, material_global_bp
 from controllers.reference_file_controller import reference_file_bp
 from controllers.settings_controller import settings_bp
 from controllers.openai_oauth_controller import openai_oauth_bp
-from controllers import project_bp, page_bp, template_bp, user_template_bp, user_style_template_bp, export_bp, file_bp, style_bp
+from controllers import project_bp, page_bp, template_bp, user_template_bp, user_style_template_bp, export_bp, file_bp, style_bp, template_assets_bp, page_template_bp, template_mode_bp
 
 
 # Enable SQLite WAL mode for all connections
@@ -149,6 +149,9 @@ def create_app():
     app.register_blueprint(template_bp)
     app.register_blueprint(user_template_bp)
     app.register_blueprint(user_style_template_bp)
+    app.register_blueprint(template_assets_bp)
+    app.register_blueprint(page_template_bp)
+    app.register_blueprint(template_mode_bp)
     app.register_blueprint(export_bp)
     app.register_blueprint(file_bp)
     app.register_blueprint(material_bp)
@@ -163,6 +166,8 @@ def create_app():
             db.create_all()
             from desktop_bootstrap import repair_desktop_settings_schema
             repair_desktop_settings_schema(db)
+        elif os.getenv('BANANA_SKIP_AUTO_MIGRATE') == '1':
+            pass
         else:
             migrations_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'migrations')
             if os.path.exists(migrations_dir):
