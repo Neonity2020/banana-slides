@@ -2498,10 +2498,7 @@ export const SlidePreview: React.FC = () => {
 
                   {/* 操作 */}
                   <div className="flex items-center gap-1.5 md:gap-2 w-full sm:w-auto justify-center">
-                    <div
-                      className="flex items-center gap-2 px-1.5 py-1"
-                      title={`${imageQualityControlEnabled ? t('preview.qualityControlOn') : t('preview.qualityControlOff')} · ${t('preview.qualityControlTooltip')}`}
-                    >
+                    <div className="group/qc relative flex items-center gap-2 px-1.5 py-1">
                       <span className="hidden md:inline text-xs font-medium text-gray-700 dark:text-foreground-secondary whitespace-nowrap">
                         {t('preview.qualityControl')}
                       </span>
@@ -2522,6 +2519,15 @@ export const SlidePreview: React.FC = () => {
                           }`}
                         />
                       </button>
+                      <span
+                        data-testid="quality-control-tooltip"
+                        className="absolute left-1/2 bottom-full z-50 mb-2 w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-xs leading-relaxed text-gray-700 opacity-0 shadow-lg transition-opacity pointer-events-none group-hover/qc:opacity-100 group-focus-within/qc:opacity-100 dark:border-border-primary dark:bg-background-elevated dark:text-foreground-secondary"
+                      >
+                        <span className="mb-1 block font-medium text-gray-900 dark:text-foreground-primary">
+                          {imageQualityControlEnabled ? t('preview.qualityControlOn') : t('preview.qualityControlOff')}
+                        </span>
+                        {t('preview.qualityControlTooltip')}
+                      </span>
                     </div>
                     {/* 手机端：模板更换按钮 */}
                     <Button
