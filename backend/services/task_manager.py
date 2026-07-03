@@ -103,10 +103,12 @@ def review_image_quality(
     """Run the multimodal quality review on an unsaved generated image."""
     with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
         temp_path = tmp.name
+    converted_image = None
     try:
         review_image = image
         if image.mode != 'RGB':
-            review_image = image.convert('RGB')
+            converted_image = image.convert('RGB')
+            review_image = converted_image
         review_image.save(temp_path, format='JPEG', quality=85)
         return ai_service.review_generated_slide_image(
             temp_path,
@@ -116,6 +118,8 @@ def review_image_quality(
             page_index=page_index,
         )
     finally:
+        if converted_image is not None:
+            converted_image.close()
         try:
             os.remove(temp_path)
         except OSError:

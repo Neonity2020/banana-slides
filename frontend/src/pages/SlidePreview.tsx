@@ -516,6 +516,7 @@ export const SlidePreview: React.FC = () => {
 
   // 预览图矩形选择状态（编辑弹窗内）
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const hasTouchedImageQualityControlRef = useRef(false);
   const [isRegionSelectionMode, setIsRegionSelectionMode] = useState(false);
   const [isSelectingRegion, setIsSelectingRegion] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
@@ -524,10 +525,12 @@ export const SlidePreview: React.FC = () => {
   const { confirm, ConfirmDialog } = useConfirm();
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadImageQualityControl = async () => {
       try {
         const response = await getSettings();
-        if (response.data) {
+        if (response.data && isMounted && !hasTouchedImageQualityControlRef.current) {
           setImageQualityControlEnabled(Boolean(response.data.enable_image_quality_control));
         }
       } catch (error) {
@@ -535,9 +538,14 @@ export const SlidePreview: React.FC = () => {
       }
     };
     loadImageQualityControl();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleToggleImageQualityControl = useCallback(async () => {
+    hasTouchedImageQualityControlRef.current = true;
     const nextValue = !imageQualityControlEnabled;
     setImageQualityControlEnabled(nextValue);
     setIsSavingImageQualityControl(true);
