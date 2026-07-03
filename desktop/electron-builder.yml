@@ -52,7 +52,7 @@ win:
     - target: nsis
       arch:
         - x64
-  artifactName: "BananaSlides-${version}-Setup.${ext}"
+  artifactName: "BananaSlides-${version}-win-${arch}-Setup.${ext}"
 
 mac:
   icon: resources/icon.icns
@@ -61,7 +61,7 @@ mac:
     - target: dmg
       arch:
         - arm64
-  artifactName: "BananaSlides-${version}.${ext}"
+  artifactName: "BananaSlides-${version}-mac-${arch}.${ext}"
 
 linux:
   target:
@@ -74,7 +74,7 @@ linux:
   icon: resources/icon.png
   category: Office
   maintainer: "Anionex <contact@anionex.com>"
-  artifactName: "BananaSlides-${version}.${ext}"
+  artifactName: "BananaSlides-${version}-linux-${arch}.${ext}"
 
 nsis:
   oneClick: false
