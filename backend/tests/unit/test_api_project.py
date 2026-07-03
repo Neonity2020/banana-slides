@@ -140,6 +140,27 @@ class TestPageBatchCreate:
 
         assert response.status_code == 400
 
+    def test_batch_create_pages_allows_null_optional_content(self, client):
+        response = client.post('/api/projects', json={
+            'creation_type': 'idea',
+            'idea_prompt': '批量导入测试'
+        })
+        data = assert_success_response(response, 201)
+        project_id = data['data']['project_id']
+
+        response = client.post(f'/api/projects/{project_id}/pages/batch', json={
+            'pages': [{
+                'order_index': 0,
+                'outline_content': None,
+                'description_content': None,
+            }]
+        })
+
+        created = assert_success_response(response, 201)['data']
+        assert created[0]['status'] == 'DRAFT'
+        assert created[0]['outline_content'] is None
+        assert created[0]['description_content'] is None
+
 
 class TestProjectGet:
     """项目获取测试"""
