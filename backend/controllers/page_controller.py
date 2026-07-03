@@ -136,13 +136,13 @@ def create_pages_batch(project_id):
         )
         insert_at = ordered_pages[0][1]['order_index']
 
-        other_pages = Page.query.filter(
+        Page.query.filter(
             Page.project_id == project_id,
             Page.order_index >= insert_at
-        ).all()
-
-        for existing_page in other_pages:
-            existing_page.order_index += len(pages_data)
+        ).update(
+            {Page.order_index: Page.order_index + len(pages_data)},
+            synchronize_session=False
+        )
 
         created_pages = []
         for offset, (_original_index, page_data) in enumerate(ordered_pages):
