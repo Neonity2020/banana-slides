@@ -107,6 +107,44 @@ describe('startOpenAIOAuthMonitor', () => {
     monitor.stop();
   });
 
+  it('retries transient getStatus failures without failing the OAuth flow', async () => {
+    const getStatus = vi.fn()
+      .mockRejectedValueOnce(new Error('temporary network failure'))
+      .mockResolvedValueOnce(connected);
+    const onConnected = vi.fn();
+    const onFailure = vi.fn();
+    const monitor = startOpenAIOAuthMonitor({
+      desktop: false,
+      popup: { closed: false } as Window,
+      getStatus,
+      onConnected,
+      onFailure,
+    });
+
+    await expect(monitor.checkNow()).resolves.toBeUndefined();
+    expect(onConnected).not.toHaveBeenCalled();
+    expect(onFailure).not.toHaveBeenCalled();
+
+    await expect(monitor.checkNow()).resolves.toBeUndefined();
+    expect(onConnected).toHaveBeenCalledWith(connected);
+  });
+
+  it('does not swallow errors thrown by the connected callback', async () => {
+    const callbackError = new Error('connected callback failed');
+    const monitor = startOpenAIOAuthMonitor({
+      desktop: false,
+      popup: { closed: false } as Window,
+      getStatus: vi.fn(async () => connected),
+      onConnected: () => {
+        throw callbackError;
+      },
+      onFailure: vi.fn(),
+    });
+
+    await expect(monitor.checkNow()).rejects.toBe(callbackError);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('ends the flow on a web callback failure and removes its timers', async () => {
     const getStatus = vi.fn(async () => disconnected);
     const onConnected = vi.fn();

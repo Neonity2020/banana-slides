@@ -21,6 +21,7 @@ interface OpenAIOAuthMonitorOptions {
 
 export interface OpenAIOAuthMonitor {
   stop: () => void;
+  checkNow: () => Promise<void>;
 }
 
 /**
@@ -106,5 +107,5 @@ export function startOpenAIOAuthMonitor({
   if (desktop) eventTarget.addEventListener('focus', onFocus);
   if (desktop) void checkStatus();
 
-  return { stop };
+  return { stop, checkNow: checkStatus };
 }
