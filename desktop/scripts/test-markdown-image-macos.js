@@ -2,6 +2,7 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { createRequire } = require('node:module');
 const net = require('node:net');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
@@ -14,6 +15,7 @@ if (!appPath) {
 }
 
 const repoRoot = path.resolve(__dirname, '..', '..');
+const frontendRequire = createRequire(path.join(repoRoot, 'frontend', 'package.json'));
 const executable = path.join(path.resolve(appPath), 'Contents', 'MacOS', 'Banana Slides');
 const smokeResultPath = path.join(outDir, 'smoke-result.json');
 const testResultPath = path.join(outDir, 'markdown-image-result.json');
@@ -124,7 +126,7 @@ async function main() {
     });
     assert.equal(pageRecord.response.status, 201);
 
-    const { chromium } = require(path.join(repoRoot, 'frontend', 'node_modules', 'playwright'));
+    const { chromium } = frontendRequire('playwright');
     browser = await chromium.connectOverCDP(`http://127.0.0.1:${debugPort}`);
     const context = browser.contexts()[0];
     assert.ok(context, 'Electron browser context was not available');
@@ -160,10 +162,14 @@ async function main() {
     process.stdout.write(`Desktop Markdown image test passed: ${testResultPath}\n`);
   } finally {
     if (projectId && fs.existsSync(smokeResultPath)) {
-      const smoke = JSON.parse(fs.readFileSync(smokeResultPath, 'utf8'));
-      await fetch(`http://127.0.0.1:${smoke.backendPort}/api/projects/${projectId}`, {
-        method: 'DELETE',
-      }).catch(() => undefined);
+      try {
+        const smoke = JSON.parse(fs.readFileSync(smokeResultPath, 'utf8'));
+        await fetch(`http://127.0.0.1:${smoke.backendPort}/api/projects/${projectId}`, {
+          method: 'DELETE',
+        });
+      } catch {
+        // Cleanup failure must not prevent the browser and app from closing.
+      }
     }
     await browser?.close().catch(() => undefined);
     if (child.exitCode === null) child.kill('SIGTERM');
