@@ -41,6 +41,33 @@ test.describe('OpenAI OAuth Settings Section', () => {
       await expect(disconnectBtn).not.toBeVisible();
     });
 
+    test('settings still render when sessionStorage persistence is unavailable', async ({ page }) => {
+      const base = await getBaseSettings();
+      await page.addInitScript(() => {
+        const originalSetItem = Storage.prototype.setItem;
+        Storage.prototype.setItem = function (key, value) {
+          if (key === 'banana-settings') {
+            throw new DOMException('Storage disabled', 'SecurityError');
+          }
+          return originalSetItem.call(this, key, value);
+        };
+      });
+      await page.route('**/api/settings', async (route) => {
+        if (route.request().method() === 'GET') {
+          await route.fulfill({
+            json: { success: true, data: { ...base, openai_oauth_connected: false, openai_oauth_account_id: null } },
+          });
+        } else {
+          await route.continue();
+        }
+      });
+
+      await page.goto(`${BASE_URL}/settings`);
+      await expandAdvancedSettings(page);
+
+      await expect(page.getByRole('button', { name: 'Login with OpenAI' })).toBeVisible();
+    });
+
     test('should show connected state with account ID and disconnect button', async ({ page }) => {
       const base = await getBaseSettings();
       await page.route('**/api/settings', async (route) => {
@@ -356,6 +383,7 @@ test.describe('OpenAI OAuth Settings Section', () => {
     test('should submit manual callback URL and update connected state', async ({ page }) => {
       const base = await getBaseSettings();
       let manualCallbackPayload: Record<string, unknown> | null = null;
+      let statusCalls = 0;
 
       await page.route('**/api/settings', async (route) => {
         if (route.request().method() === 'GET') {
@@ -375,6 +403,7 @@ test.describe('OpenAI OAuth Settings Section', () => {
       });
 
       await page.route('**/api/settings/openai-oauth/status', async (route) => {
+        statusCalls += 1;
         await route.fulfill({
           json: { success: true, data: { connected: true, account_id: 'user@example.com' } },
         });
@@ -390,6 +419,7 @@ test.describe('OpenAI OAuth Settings Section', () => {
 
       await expect(page.locator('text=user@example.com')).toBeVisible();
       expect(manualCallbackPayload).toEqual({ callback_url: callbackUrl });
+      expect(statusCalls).toBe(0);
     });
 
     test('should mark OAuth disconnected after Codex settings test returns unauthorized', async ({ page }) => {

@@ -773,7 +773,11 @@ export const Settings: React.FC = () => {
 
   useEffect(() => {
     if (settings) {
-      sessionStorage.setItem('banana-settings', JSON.stringify(settings));
+      try {
+        sessionStorage.setItem('banana-settings', JSON.stringify(settings));
+      } catch (error) {
+        console.warn('Failed to persist settings in sessionStorage:', error);
+      }
     }
   }, [settings]);
 
@@ -868,10 +872,7 @@ export const Settings: React.FC = () => {
         setOauthConnecting(false);
         setManualCallbackUrl('');
         setManualCallbackOpen(false);
-        const statusResp = await api.getOpenAIOAuthStatus();
-        if (statusResp.success && statusResp.data) {
-          applyOAuthStatus(statusResp.data.connected, statusResp.data.account_id || null);
-        }
+        applyOAuthStatus(true, resp.data?.account_id || null);
         show({ message: t('settings.openaiOAuth.manualCallbackSuccess'), type: 'success' });
       } else {
         show({ message: t('settings.openaiOAuth.connectFailed'), type: 'error' });
