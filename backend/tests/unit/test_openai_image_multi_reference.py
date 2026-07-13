@@ -95,13 +95,15 @@ def test_forced_images_protocol_preserves_refs_for_custom_proxy_model():
     assert len(request['image']) == 2
 
 
-def test_invalid_edit_size_falls_back_to_square(caplog):
+@pytest.mark.parametrize('invalid_size', ['auto', None])
+def test_invalid_edit_size_falls_back_to_square(caplog, invalid_size):
     provider = _make_provider()
+    provider._resolve_size = MagicMock(return_value=invalid_size)
 
     provider.generate_image(
         prompt='Use this reference.',
         ref_images=[Image.new('RGB', (8, 8), color='green')],
-        aspect_ratio='invalid',
+        aspect_ratio='1:1',
         resolution='1K',
     )
 

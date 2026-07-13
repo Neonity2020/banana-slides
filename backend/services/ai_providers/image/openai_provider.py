@@ -313,7 +313,8 @@ class OpenAIImageProvider(ImageProvider):
             # Resize reference images to match the target size so providers do not
             # reject mismatched dimensions.
             try:
-                w, h = map(int, size.split('x'))
+                size_parts = size.split('x') if isinstance(size, str) else ()
+                w, h = map(int, size_parts)
             except (TypeError, ValueError):
                 logger.warning(
                     "%s resolved an invalid edit size %r; falling back to 1024x1024",
