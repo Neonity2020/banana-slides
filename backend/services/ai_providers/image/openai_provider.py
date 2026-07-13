@@ -315,6 +315,8 @@ class OpenAIImageProvider(ImageProvider):
             try:
                 size_parts = size.split('x') if isinstance(size, str) else ()
                 w, h = map(int, size_parts)
+                if w <= 0 or h <= 0:
+                    raise ValueError("Image edit dimensions must be positive")
             except (TypeError, ValueError):
                 logger.warning(
                     "%s resolved an invalid edit size %r; falling back to 1024x1024",
