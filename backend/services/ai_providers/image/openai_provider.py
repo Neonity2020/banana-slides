@@ -328,10 +328,16 @@ class OpenAIImageProvider(ImageProvider):
             image_files = []
             for index, ref_img in enumerate(selected_ref_images, start=1):
                 prepared_image = ref_img
+                if prepared_image.mode != 'RGBA':
+                    prepared_image = prepared_image.convert('RGBA')
                 if prepared_image.size != (w, h):
                     prepared_image = prepared_image.resize((w, h), Image.LANCZOS)
                 image_file = BytesIO(self._pil_to_png_bytes(prepared_image))
-                image_file.name = f'image_{index}.png'
+                image_file.name = (
+                    'image.png'
+                    if len(selected_ref_images) == 1
+                    else f'image_{index}.png'
+                )
                 image_files.append(image_file)
 
             image_input = image_files[0] if len(image_files) == 1 else image_files

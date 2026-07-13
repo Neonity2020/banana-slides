@@ -73,7 +73,23 @@ def test_gpt_image_keeps_single_reference_proxy_compatible():
 
     request = provider.client.images.edit.call_args.kwargs
     assert isinstance(request['image'], BytesIO)
-    assert request['image'].name == 'image_1.png'
+    assert request['image'].name == 'image.png'
+
+
+def test_gpt_image_accepts_palette_mode_reference():
+    provider = _make_provider()
+    palette_image = Image.new('P', (8, 8), color=1)
+    palette_image.putpalette([0, 0, 0, 0, 255, 0] + [0, 0, 0] * 254)
+
+    provider.generate_image(
+        prompt='Use this palette image.',
+        ref_images=[palette_image],
+        aspect_ratio='1:1',
+        resolution='1K',
+    )
+
+    request = provider.client.images.edit.call_args.kwargs
+    assert Image.open(request['image']).mode == 'RGBA'
 
 
 def test_forced_images_protocol_preserves_refs_for_custom_proxy_model():
