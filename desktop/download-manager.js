@@ -104,7 +104,9 @@ function downloadToPath({
         cleanupTimer = null;
       }
       downloadSession.removeListener('will-download', listener);
-      currentWindow?.removeListener('closed', handleWindowClosed);
+      if (currentWindow && !currentWindow.isDestroyed()) {
+        currentWindow.removeListener('closed', handleWindowClosed);
+      }
     };
 
     const finish = (result) => {

@@ -98,6 +98,26 @@ test('reports an interrupted download instead of claiming success', async (t) =>
   });
 });
 
+test('does not touch window listeners after the Electron window is destroyed', async (t) => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'banana-download-'));
+  t.after(() => fs.rmSync(tempDir, { recursive: true, force: true }));
+  const downloadSession = new FakeDownloadSession(Buffer.from('pptx bytes'));
+  const currentWindow = new EventEmitter();
+  currentWindow.isDestroyed = () => true;
+  currentWindow.removeListener = () => {
+    throw new Error('Object has been destroyed');
+  };
+
+  const result = await downloadToPath({
+    downloadSession,
+    downloadUrl: 'http://127.0.0.1:15000/files/project/exports/presentation.pptx',
+    savePath: path.join(tempDir, 'presentation.pptx'),
+    currentWindow,
+  });
+
+  assert.equal(result.success, true);
+});
+
 test('copies an existing desktop export directly to the selected path', async (t) => {
   const userDataPath = fs.mkdtempSync(path.join(os.tmpdir(), 'banana-user-data-'));
   t.after(() => fs.rmSync(userDataPath, { recursive: true, force: true }));
