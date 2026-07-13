@@ -40,14 +40,16 @@ export function startOpenAIOAuthMonitor({
   let stopped = false;
   let checking = false;
   let callbackSucceeded = false;
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
+  let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
 
   const stop = () => {
     if (stopped) return;
     stopped = true;
     eventTarget.removeEventListener('message', onMessage);
     eventTarget.removeEventListener('focus', onFocus);
-    clearInterval(pollTimer);
-    clearTimeout(timeoutTimer);
+    if (pollTimer !== null) clearInterval(pollTimer);
+    if (timeoutTimer !== null) clearTimeout(timeoutTimer);
   };
 
   const finishFailure = (reason: OpenAIOAuthFailureReason, message?: string) => {
@@ -86,7 +88,7 @@ export function startOpenAIOAuthMonitor({
     if (desktop) void checkStatus();
   }
 
-  const pollTimer = setInterval(() => {
+  pollTimer = setInterval(() => {
     if (!desktop && popup?.closed && !callbackSucceeded) {
       finishFailure('popup_closed');
       return;
@@ -94,7 +96,7 @@ export function startOpenAIOAuthMonitor({
     if (desktop || callbackSucceeded) void checkStatus();
   }, pollIntervalMs);
 
-  const timeoutTimer = setTimeout(() => {
+  timeoutTimer = setTimeout(() => {
     finishFailure('timeout');
   }, timeoutMs);
 

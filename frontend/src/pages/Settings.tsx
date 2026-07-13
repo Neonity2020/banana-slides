@@ -771,16 +771,20 @@ export const Settings: React.FC = () => {
 
   useEffect(() => stopOAuthMonitor, [stopOAuthMonitor]);
 
+  useEffect(() => {
+    if (settings) {
+      sessionStorage.setItem('banana-settings', JSON.stringify(settings));
+    }
+  }, [settings]);
+
   const applyOAuthStatus = useCallback((connected: boolean, accountId: string | null) => {
     setSettings(prev => {
       if (!prev) return prev;
-      const next = {
+      return {
         ...prev,
         openai_oauth_connected: connected,
         openai_oauth_account_id: accountId,
       };
-      sessionStorage.setItem('banana-settings', JSON.stringify(next));
-      return next;
     });
   }, []);
 
@@ -1048,7 +1052,6 @@ export const Settings: React.FC = () => {
       if (response.data) {
         setSettings(response.data);
         setFormData(formDataFromSettings(response.data));
-        sessionStorage.setItem('banana-settings', JSON.stringify(response.data));
       }
     } catch (error: any) {
       console.error('加载设置失败:', error);
@@ -1064,13 +1067,11 @@ export const Settings: React.FC = () => {
   const markOpenAIOAuthDisconnected = () => {
     setSettings(prev => {
       if (!prev) return prev;
-      const next = {
+      return {
         ...prev,
         openai_oauth_connected: false,
         openai_oauth_account_id: null,
       };
-      sessionStorage.setItem('banana-settings', JSON.stringify(next));
-      return next;
     });
   };
 
@@ -1107,7 +1108,6 @@ export const Settings: React.FC = () => {
       const response = await api.updateSettings(payload);
       if (response.data) {
         setSettings(response.data);
-        sessionStorage.setItem('banana-settings', JSON.stringify(response.data));
         show({ message: t('settings.messages.saveSuccess'), type: 'success' });
         show({ message: t('settings.messages.testServiceTip'), type: 'info' });
         // Clear all sensitive fields after save
