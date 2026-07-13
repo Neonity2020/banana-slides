@@ -131,7 +131,7 @@ test('copies an existing desktop export directly to the selected path', async (t
   fs.mkdirSync(path.dirname(savePath), { recursive: true });
   fs.writeFileSync(sourcePath, 'real export bytes');
 
-  const resolvedPath = resolveLocalExportPath(
+  const resolvedPath = await resolveLocalExportPath(
     'http://127.0.0.1:15000/files/project-1/exports/presentation.pptx?cache=1',
     userDataPath,
   );
@@ -142,16 +142,16 @@ test('copies an existing desktop export directly to the selected path', async (t
   assert.equal(fs.readFileSync(savePath, 'utf8'), 'real export bytes');
 });
 
-test('does not resolve traversal or non-local URLs as desktop exports', () => {
+test('does not resolve traversal or non-local URLs as desktop exports', async () => {
   assert.equal(
-    resolveLocalExportPath(
+    await resolveLocalExportPath(
       'http://127.0.0.1:15000/files/..%2Fsecret/exports/presentation.pptx',
       '/tmp/banana-user-data',
     ),
     null,
   );
   assert.equal(
-    resolveLocalExportPath(
+    await resolveLocalExportPath(
       'https://example.com/files/project-1/exports/presentation.pptx',
       '/tmp/banana-user-data',
     ),

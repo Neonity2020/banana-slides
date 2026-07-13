@@ -363,7 +363,7 @@ function setupIPC() {
     });
     if (canceled || !savePath) return { success: false, canceled: true };
     if (currentWindow.isDestroyed()) return { success: false };
-    const localExportPath = resolveLocalExportPath(downloadUrl, app.getPath('userData'));
+    const localExportPath = await resolveLocalExportPath(downloadUrl, app.getPath('userData'));
     const result = localExportPath
       ? await copyLocalExportToPath(localExportPath, savePath)
       : await downloadToPath({

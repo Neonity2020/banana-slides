@@ -25,9 +25,9 @@ function matchesDownload(item, downloadUrl) {
     || (isClientSideDownloadUrl(downloadUrl) && itemUrl === downloadUrl);
 }
 
-function verifySavedFile(filePath) {
+async function verifySavedFile(filePath) {
   try {
-    const stat = fs.statSync(filePath);
+    const stat = await fs.promises.stat(filePath);
     if (!stat.isFile() || stat.size <= 0) {
       return { success: false, state: 'empty', error: 'The saved file is missing or empty.' };
     }
@@ -37,7 +37,7 @@ function verifySavedFile(filePath) {
   }
 }
 
-function resolveLocalExportPath(downloadUrl, userDataPath) {
+async function resolveLocalExportPath(downloadUrl, userDataPath) {
   try {
     const parsedUrl = new URL(downloadUrl);
     if (!['127.0.0.1', 'localhost', '[::1]'].includes(parsedUrl.hostname)) {
@@ -69,7 +69,8 @@ function resolveLocalExportPath(downloadUrl, userDataPath) {
     if (!sourcePath.startsWith(`${uploadsRoot}${path.sep}`)) {
       return null;
     }
-    return verifySavedFile(sourcePath).success ? sourcePath : null;
+    const verification = await verifySavedFile(sourcePath);
+    return verification.success ? sourcePath : null;
   } catch (error) {
     return null;
   }
@@ -80,7 +81,7 @@ async function copyLocalExportToPath(sourcePath, savePath) {
     if (path.resolve(sourcePath) !== path.resolve(savePath)) {
       await fs.promises.copyFile(sourcePath, savePath);
     }
-    return verifySavedFile(savePath);
+    return await verifySavedFile(savePath);
   } catch (error) {
     return { success: false, state: 'failed', error: `The export could not be copied: ${error.message}` };
   }
@@ -128,13 +129,13 @@ function downloadToPath({
 
       activeItem = item;
       item.setSavePath(savePath);
-      item.once('done', (_event, state) => {
+      item.once('done', async (_event, state) => {
         if (state !== 'completed') {
           finish({ success: false, state, error: `Download ${state}.` });
           return;
         }
 
-        finish(verifySavedFile(savePath));
+        finish(await verifySavedFile(savePath));
       });
     };
 
