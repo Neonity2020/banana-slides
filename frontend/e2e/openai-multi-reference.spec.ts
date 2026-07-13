@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, errors } from '@playwright/test'
 import { execFileSync } from 'child_process'
 import { createServer, type Server } from 'http'
 import * as fs from 'fs'
@@ -225,7 +225,14 @@ test.describe('OpenAI native multi-reference generation', () => {
     await generateButton.click()
 
     const confirmOneK = page.getByRole('button', { name: /仍然生成|Generate Anyway/i })
-    if (await confirmOneK.isVisible()) await confirmOneK.click()
+    const needsConfirmation = await confirmOneK
+      .waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => true)
+      .catch((error: unknown) => {
+        if (error instanceof errors.TimeoutError) return false
+        throw error
+      })
+    if (needsConfirmation) await confirmOneK.click()
 
     await expect.poll(() => receivedReferenceCount, { timeout: 60_000 }).toBe(3)
     await expect(page.locator('main img[src*="/pages/"]')).toBeVisible({ timeout: 60_000 })
