@@ -66,8 +66,11 @@ async function waitForFile(filePath, child, timeoutMs = 120000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (fs.existsSync(filePath)) return;
-    if (child.exitCode !== null) {
-      throw new Error(`Desktop app exited before creating ${filePath}`);
+    if (child.exitCode !== null || child.signalCode !== null) {
+      throw new Error(
+        `Desktop app exited before creating ${filePath} `
+        + `(exitCode: ${child.exitCode}, signalCode: ${child.signalCode})`,
+      );
     }
     await delay(250);
   }
@@ -153,9 +156,14 @@ async function main() {
 
     const { chromium } = frontendRequire('@playwright/test');
     browser = await chromium.connectOverCDP(`http://127.0.0.1:${debugPort}`);
-    const context = browser.contexts()[0];
-    assert.ok(context, 'Electron browser context was not available');
-    const page = context.pages().find((candidate) => candidate.url().includes('index.html'));
+    let page;
+    const pageDeadline = Date.now() + 10000;
+    while (Date.now() < pageDeadline) {
+      const context = browser.contexts()[0];
+      page = context?.pages().find((candidate) => candidate.url().includes('index.html'));
+      if (page) break;
+      await delay(200);
+    }
     assert.ok(page, 'Electron main window was not available');
 
     const expectedImageUrl = `${backendUrl}${material.url}`;
@@ -218,4 +226,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { assertSafeOutputDirectory };
+module.exports = { assertSafeOutputDirectory, waitForFile };

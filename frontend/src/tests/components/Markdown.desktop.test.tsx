@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 
 const { getBackendPort } = vi.hoisted(() => {
   const getBackendPort = vi.fn(() => '15410');
@@ -18,6 +18,10 @@ vi.mock('@/utils', async (importOriginal) => ({
 import { Markdown } from '@/components/shared/Markdown';
 
 describe('Markdown desktop images', () => {
+  afterAll(() => {
+    delete (window as typeof window & { electronAPI?: unknown }).electronAPI;
+  });
+
   it('loads backend file images from the dynamic desktop port', () => {
     render(
       <Markdown>
