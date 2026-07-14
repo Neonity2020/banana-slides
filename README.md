@@ -34,7 +34,7 @@
   <b>在几分钟内从想法到演示文稿，无需繁琐排版、口头提出修改，迈向真正的 "Vibe PPT"</b>
 </p>
 <p>
-  <a href="https://inferera.com/"><b>🚀 在线 Demo</b></a>
+  <a href="https://bananaslides.online/"><b>🚀 在线 Demo</b></a>
   &nbsp;|&nbsp;
   <a href="https://docs.inferera.com/"><b>📖 文档</b></a>
   &nbsp;|&nbsp;
