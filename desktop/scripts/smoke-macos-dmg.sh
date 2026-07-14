@@ -42,15 +42,17 @@ cleanup() {
     fi
     wait "$app_pid" >/dev/null 2>&1 || true
   fi
-  pkill -TERM -f "$install_dir" >/dev/null 2>&1 || true
-  for _ in 1 2 3; do
-    if ! pgrep -f "$install_dir" >/dev/null 2>&1; then
-      break
-    fi
-    sleep 1
-  done
-  pkill -KILL -f "$install_dir" >/dev/null 2>&1 || true
-  if hdiutil info | grep -q "$mount_dir"; then
+  if [[ -n "${install_dir:-}" ]]; then
+    pkill -TERM -f "$install_dir" >/dev/null 2>&1 || true
+    for _ in 1 2 3; do
+      if ! pgrep -f "$install_dir" >/dev/null 2>&1; then
+        break
+      fi
+      sleep 1
+    done
+    pkill -KILL -f "$install_dir" >/dev/null 2>&1 || true
+  fi
+  if [[ -n "${mount_dir:-}" ]] && hdiutil info | grep -q "$mount_dir"; then
     hdiutil detach "$mount_dir" >/dev/null 2>&1 || true
   fi
 }
