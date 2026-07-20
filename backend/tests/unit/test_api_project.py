@@ -490,14 +490,15 @@ class TestProjectOutlineStream:
         prompt = get_description_to_outline_prompt_markdown(
             context,
             language='zh',
-            extra_fields=['视觉元素'],
+            extra_fields=['配图与素材'],
         )
 
         assert '<!-- PAGE_DESCRIPTION -->' in prompt
         assert '--- 页面文字 ---' in prompt
         assert '--- 页面文字结束 ---' in prompt
-        assert '图片素材：' in prompt
-        assert '视觉元素：' in prompt
+        # 素材引用并入"配图与素材"字段，不再有独立的"图片素材"段
+        assert '图片素材：' not in prompt
+        assert '配图与素材：' in prompt
         assert '页面标题：' not in prompt
 
     def test_outline_stream_parses_legacy_outline_only_markdown(self):

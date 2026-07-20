@@ -424,7 +424,9 @@ class AIService:
         creation_type = project_context.creation_type or 'idea'
 
         extra_field_names = self._get_extra_field_names() if creation_type == 'descriptions' else []
-        field_pattern = self._build_extra_field_pattern(extra_field_names)
+        field_pattern = self._build_extra_field_pattern(
+            self._get_parseable_field_names() if creation_type == 'descriptions' else []
+        )
 
         if creation_type == 'outline':
             prompt = get_outline_parsing_prompt_markdown(project_context, language)
@@ -736,6 +738,19 @@ class AIService:
             logger.warning("Failed to get extra field names from settings", exc_info=True)
             return ['配图与素材', '版式与重点', '演讲者备注']
 
+    @classmethod
+    def _get_parseable_field_names(cls) -> list:
+        """解析用字段名 = 当前配置字段 + 旧字段名。
+
+        指令只用配置字段（不能让模型输出已停用的字段名），但解析要宽容：
+        模型若沿用参考资料里的旧字段名，必须切进 extra_fields，
+        否则字段行会留在页面文字里被逐字渲染到幻灯片上。
+        """
+        from models import Settings
+        return list(dict.fromkeys(
+            [*cls._get_extra_field_names(), *Settings.LEGACY_FIELD_EQUIV.keys()]
+        ))
+
     def generate_page_description(self, project_context: ProjectContext, outline: List[Dict],
                                  page_outline: Dict, page_index: int, language='zh',
                                  detail_level: str = 'default') -> Dict:
@@ -772,7 +787,7 @@ class AIService:
         response_text = self.text_provider.generate_text(desc_prompt, thinking_budget=actual_budget)
 
         text = dedent(response_text)
-        description_text, extra_fields = self._parse_extra_fields(text, extra_field_names)
+        description_text, extra_fields = self._parse_extra_fields(text, self._get_parseable_field_names())
 
         result = {'text': description_text}
         if extra_fields:
@@ -801,7 +816,7 @@ class AIService:
         )
 
         # Build regex pattern to detect any configured extra field header
-        field_pattern = self._build_extra_field_pattern(extra_field_names)
+        field_pattern = self._build_extra_field_pattern(self._get_parseable_field_names())
 
         actual_budget = self._get_text_thinking_budget()
         buffer = ""
@@ -1261,11 +1276,7 @@ class AIService:
         if not isinstance(descriptions, list):
             raise ValueError("Expected a list of page descriptions, but got: " + str(type(descriptions)))
 
-        # 当前配置字段 + 存量数据里的旧字段名，都要能被切分出来
-        from models import Settings
-        field_names = list(dict.fromkeys(
-            [*self._get_extra_field_names(), *Settings.LEGACY_FIELD_EQUIV.keys()]
-        ))
+        field_names = self._get_parseable_field_names()
         results = []
         for desc in descriptions:
             text, extra_fields = self._parse_extra_fields(str(desc), field_names)
