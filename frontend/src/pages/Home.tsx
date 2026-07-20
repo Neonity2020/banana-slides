@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { Sparkles, FileText, FileEdit, ImagePlus, Paperclip, Palette, Lightbulb, Search, Settings, FolderOpen, HelpCircle, Sun, Moon, Globe, Monitor, ChevronDown, Upload, RefreshCw } from 'lucide-react';
+import { Sparkles, FileText, FileEdit, ImagePlus, Paperclip, Palette, Lightbulb, Search, Settings, FolderOpen, HelpCircle, Sun, Moon, Globe, Monitor, ChevronDown, Upload, RefreshCw, X } from 'lucide-react';
 import { Button, Card, useToast, MaterialGeneratorModal, MaterialCenterModal, MaterialSelector, ReferenceFileList, ReferenceFileSelector, FilePreviewModal, HelpModal, Footer, GithubRepoCard, TextStyleSelector } from '@/components/shared';
 import { MarkdownTextarea, type MarkdownTextareaRef } from '@/components/shared/MarkdownTextarea';
 import { TemplateSelector, getTemplateFile } from '@/components/shared/TemplateSelector';
@@ -36,7 +36,7 @@ const homeI18n = {
     home: {
       title: '蕉幻',
       subtitle: 'Vibe your slides like vibe coding',
-      tagline: '基于 nano banana pro🍌 的原生 AI PPT 生成器',
+      tagline: '基于 nano banana pro 的原生 AI PPT 生成器',
       features: {
         oneClick: '一句话生成 PPT',
         naturalEdit: '自然语言修改',
@@ -117,7 +117,7 @@ const homeI18n = {
     home: {
       title: 'Banana Slides',
       subtitle: 'Vibe your slides like vibe coding',
-      tagline: 'AI-native PPT generator powered by nano banana pro🍌',
+      tagline: 'AI-native PPT generator powered by nano banana pro',
       features: {
         oneClick: 'One-click PPT generation',
         naturalEdit: 'Natural language editing',
@@ -375,7 +375,7 @@ export const Home: React.FC = () => {
     // 检查是否是PPT文件，提示建议使用PDF
     const fileExt = file.name.split('.').pop()?.toLowerCase();
     if (fileExt === 'ppt' || fileExt === 'pptx') 
-      show({ message: `💡 ${t('home.messages.pptTip')}`, type: 'info' });
+      show({ message: t('home.messages.pptTip'), type: 'info' });
     
     setIsUploadingFile(true);
     try {
@@ -985,7 +985,7 @@ export const Home: React.FC = () => {
                       setRenovationFile(file);
                       const ext = file.name.split('.').pop()?.toLowerCase();
                       if (ext === 'ppt' || ext === 'pptx') {
-                        show({ message: `💡 ${t('home.messages.pptTip')}`, type: 'info' });
+                        show({ message: t('home.messages.pptTip'), type: 'info' });
                       }
                     } else {
                       show({ message: t('home.renovation.onlyPdfPptx'), type: 'error' });
@@ -1004,7 +1004,7 @@ export const Home: React.FC = () => {
                         onClick={(e) => { e.stopPropagation(); setRenovationFile(null); }}
                         className="ml-2 text-gray-400 hover:text-red-500 transition-colors"
                       >
-                        ✕
+                        <X size={16} />
                       </button>
                     </div>
                   ) : (
@@ -1025,7 +1025,7 @@ export const Home: React.FC = () => {
                       setRenovationFile(file);
                       const ext = file.name.split('.').pop()?.toLowerCase();
                       if (ext === 'ppt' || ext === 'pptx') {
-                        show({ message: `💡 ${t('home.messages.pptTip')}`, type: 'info' });
+                        show({ message: t('home.messages.pptTip'), type: 'info' });
                       }
                     }
                     e.target.value = '';
