@@ -794,7 +794,7 @@ def get_descriptions_refinement_prompt(current_descriptions: List[Dict], user_re
         if isinstance(content, dict):
             # 额外字段一并带上，否则精修会在不知情的情况下把它们改没
             extra_fields = content.get('extra_fields') or {}
-            content = content.get('text', '')
+            content = content.get('text') or ''
             if isinstance(extra_fields, dict):
                 field_lines = [
                     f"{name}：{value}" for name, value in extra_fields.items()

@@ -1279,7 +1279,13 @@ class AIService:
         field_names = self._get_parseable_field_names()
         results = []
         for desc in descriptions:
-            text, extra_fields = self._parse_extra_fields(str(desc), field_names)
+            # 模型偶尔会返回对象而非字符串；直接 str() 会把 Python dict 字面量
+            # 渲染到幻灯片上，先按「字段：值」逐行摊平再解析
+            if isinstance(desc, dict):
+                desc_text = '\n'.join(f'{k}：{v}' for k, v in desc.items() if v)
+            else:
+                desc_text = str(desc)
+            text, extra_fields = self._parse_extra_fields(desc_text, field_names)
             result = {'text': text}
             if extra_fields:
                 result['extra_fields'] = extra_fields

@@ -356,6 +356,45 @@ def test_refine_descriptions_without_fields_returns_text_only(client, monkeypatc
     assert '只有正文' in result[0]['text']
 
 
+def test_refine_descriptions_flattens_dict_items(client, monkeypatch):
+    """模型返回对象而非字符串时，不能把 Python dict 字面量渲染到幻灯片上。"""
+    from services.ai_service import AIService
+
+    service = AIService.__new__(AIService)
+    monkeypatch.setattr(
+        AIService, 'generate_json',
+        lambda self, prompt, **kwargs: [
+            {'页面文字': '- 市场高速增长', '版式与重点': '左文右图'},
+        ],
+    )
+    monkeypatch.setattr(
+        AIService, '_get_extra_field_names',
+        staticmethod(lambda: list(Settings.DEFAULT_EXTRA_FIELDS)),
+    )
+
+    with client.application.app_context():
+        result = service.refine_descriptions([], '调整', _Ctx())
+
+    assert result[0]['extra_fields'] == {'版式与重点': '左文右图'}
+    assert '市场高速增长' in result[0]['text']
+    assert '{' not in result[0]['text']
+
+
+def test_refinement_prompt_tolerates_null_text(ctx):
+    """description_content 里 text 为 null 时不应炸掉 prompt 构造。"""
+    prompt = prompts.get_descriptions_refinement_prompt(
+        current_descriptions=[{
+            'index': 0,
+            'title': '空页',
+            'description_content': {'text': None, 'extra_fields': {'版式与重点': '居中'}},
+        }],
+        user_requirement='补充内容',
+        project_context=ctx,
+    )
+
+    assert '版式与重点：居中' in prompt
+
+
 def test_refine_descriptions_rejects_non_list(client, monkeypatch):
     from services.ai_service import AIService
 

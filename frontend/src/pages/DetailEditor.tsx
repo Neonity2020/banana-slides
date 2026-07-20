@@ -240,7 +240,12 @@ export const DetailEditor: React.FC = () => {
   const [availableFields, setAvailableFields] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('banana-available-extra-fields');
-      return stored ? JSON.parse(stored) : DEFAULT_EXTRA_FIELDS;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // 缓存结构损坏时回落到默认值，否则后续 map/indexOf 会崩
+        if (Array.isArray(parsed)) return parsed;
+      }
+      return DEFAULT_EXTRA_FIELDS;
     } catch { return DEFAULT_EXTRA_FIELDS; }
   });
   const [settingsOpen, setSettingsOpen] = useState(false);
