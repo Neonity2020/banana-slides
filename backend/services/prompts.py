@@ -91,6 +91,17 @@ _OUTLINE_JSON_FORMAT = """\
     }
 ]"""
 
+# 论断式大纲（assertion-evidence）：大纲承载每页结论，描述层据此写标题、定视觉主次
+_OUTLINE_TAKEAWAY_RULE = """\
+Takeaway rule:
+- For content pages, the FIRST point must be the page's takeaway: one complete assertion \
+sentence stating the conclusion the audience should remember (e.g. "Compute limits, not \
+lack of ideas, caused every AI winter"), never a topic phrase (e.g. "AI winter review"). \
+Follow it with 1-2 points listing the key supporting content to cover.
+- For functional pages (cover, table of contents, section divider, thank-you/Q&A), points \
+only describe what the page contains — do not force assertions.
+- Read in order, the takeaways should form a coherent storyline of the whole deck."""
+
 
 # --- 辅助函数 ---
 
@@ -313,6 +324,8 @@ You can organize the content in two ways:
 
 {_OUTLINE_JSON_FORMAT}
 
+{_OUTLINE_TAKEAWAY_RULE}
+
 Choose the format that best fits the content. Use parts when the PPT has clear major sections.
 Unless otherwise specified, the first page should be kept simplest, containing only the title, subtitle, and presenter information.
 
@@ -339,31 +352,34 @@ Output formats:
 1. Simple format, for short PPTs without major sections:
 
 ## Slide title
-One concise sentence describing what this slide should cover. The sentence may include the slide’s role, main idea, key supporting points, examples, data, or transition logic when relevant.
+For content pages: one assertion sentence stating this page's takeaway (the conclusion the audience should remember), optionally followed by key supporting points, examples, data, or transition logic. For functional pages (cover, TOC, section divider): one sentence describing what the page contains.
 
 ## Slide title
-One concise sentence describing what this slide should cover.
+Page takeaway sentence.
 
 2. Part-based format, for longer PPTs with clear major sections:
 
 # Part 1: Section name
 
 ## Slide title
-One concise sentence describing what this slide should cover.
+Page takeaway sentence.
 
 ## Slide title
-One concise sentence describing what this slide should cover.
+Page takeaway sentence.
 
 # Part 2: Section name
 
 ## Slide title
-One concise sentence describing what this slide should cover.
+Page takeaway sentence.
 
 Constraints:
 - Title should not contain page number.
 - Choose the format that best fits the content. Use parts when the PPT has clear major sections.
 - Unless otherwise specified, the first page should be kept simplest, containing only the title, subtitle, and presenter information.
 - Keep content at the outline level: focus on intent, topic, and logic, not polished final wording.
+- Takeaway assertions must be complete, polished sentences — the one exception to outline-level brevity.
+- Read in order, the page takeaways should form a coherent storyline.
+- A takeaway states a conclusion (e.g. "Compute limits, not lack of ideas, caused every AI winter"), never a topic phrase (e.g. "AI winter review").
 - Each outline page will eventually be converted into an actual slide. Therefore, if a slide should not appear in the final deck, do not output that page from the beginning.
 
 The user's request: {idea_prompt}.
@@ -462,6 +478,7 @@ Important rules:
 - If the text has clear sections/parts, use the part-based format
 - Preserve the logical structure and organization from the original text
 - The points should be concise summaries of the main content for each page
+- If a page argues something, phrase its FIRST point as that page's takeaway assertion (found in or implied by the user's text); functional pages (cover, TOC, section divider) are exempt
 
 Now extract the outline structure from the description text above. Return only the JSON, don't include any other text.
 {get_language_instruction(language)}
@@ -481,10 +498,9 @@ def get_description_to_outline_prompt_markdown(project_context: 'ProjectContext'
 [此处使用 markdown 直接放置正文文字，细致程度要求：{DETAIL_LEVEL_SPECS[detail_level]}。可包含 LaTeX 公式、表格等内容，不要重复添加页面标题，不要把用户的设计意图显式地放在页面文字中。]
 
 --- 页面文字结束 ---
-
-图片素材：
-[如果参考文件或用户输入中存在相关图片素材，以 markdown 格式引用，如 ![描述](/files/xxx/image.png)；否则省略此部分。]
 {_format_extra_field_instructions(extra_fields)}
+
+素材图片（以 /files/ 开头的本地路径）以 markdown 格式引用，如 ![描述](/files/xxx/image.png)，优先写入"配图与素材"字段；若该字段未启用，则直接附在页面文字之后。
 """
 
     prompt = (f"""\
@@ -506,6 +522,7 @@ Output rules:
 {description_format}
 - Preserve layout, style, material, and content details in the page description
 - Keep the outline points at the same level as normal idea-generated outlines: focus on slide intent, narrative role, topic, logic, transition, or design purpose
+- If a page argues something, phrase its FIRST outline point as that page's takeaway assertion (found in or implied by the user's text); functional pages (cover, TOC, section divider) are exempt
 - Do not put final slide copy, exact page text, long evidence lists, or detailed visual/layout instructions in the outline points
 - Put concrete page text, data, examples, layout, style, and material details only in the page description section
 - Use `<!-- PAGE_END -->` after each page
@@ -514,7 +531,8 @@ Output rules:
 Example:
 ## 市场机会概览
 <!-- OUTLINE_POINTS -->
-- Establish why this opportunity matters and how it connects the audience from macro trend to business relevance.
+- 需求正从单点工具转向端到端解决方案，这是本轮增长的真正驱动力。
+- 用三年增长数据说明市场规模与结构变化。
 <!-- PAGE_DESCRIPTION -->
 --- 页面文字 ---
 - 过去三年目标市场保持高速增长
@@ -522,8 +540,8 @@ Example:
 
 --- 页面文字结束 ---
 
-图片素材：
-使用趋势图展示增长曲线，整体保持专业克制的商务风格
+配图与素材：折线图：过去三年目标市场增长曲线，突出增速
+版式与重点：上标题下内容，左侧要点右侧趋势图；趋势图为视觉重点
 <!-- PAGE_END -->
 
 Now split the description text above and output the page-by-page structure. Output `<!-- END -->` on the last line when finished.
@@ -585,6 +603,8 @@ You are a helpful assistant that modifies PPT outlines based on user requirement
 ]
 
 选择最适合内容的格式。当 PPT 有清晰的主要章节时使用章节格式。
+
+{_OUTLINE_TAKEAWAY_RULE}
 
 现在请根据用户要求修改大纲，只输出 JSON 格式的大纲，不要包含其他文字。
 {get_language_instruction(language)}
