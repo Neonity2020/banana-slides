@@ -28,14 +28,79 @@ class TestProjectCreate:
         """测试从大纲创建项目"""
         response = client.post('/api/projects', json={
             'creation_type': 'outline',
-            'outline': [
-                {'title': '第一页', 'points': ['要点1']},
-                {'title': '第二页', 'points': ['要点2']}
-            ]
+            'outline_text': '第一页：介绍\n- 要点1\n\n第二页：方案\n- 要点2'
         })
         
         data = assert_success_response(response, 201)
         assert 'project_id' in data['data']
+
+    @pytest.mark.parametrize('payload, expected_message', [
+        (
+            {'creation_type': 'idea', 'idea_prompt': '  \n\t '},
+            'idea_prompt must contain non-whitespace text',
+        ),
+        (
+            {'creation_type': 'outline', 'outline_text': ''},
+            'outline_text must contain non-whitespace text',
+        ),
+        (
+            {'creation_type': 'descriptions', 'description_text': None},
+            'description_text is required',
+        ),
+        (
+            {'creation_type': 'descriptions', 'description_text': ['not text']},
+            'description_text must be a string',
+        ),
+    ])
+    def test_create_project_rejects_missing_blank_or_non_text_content(
+        self, client, payload, expected_message
+    ):
+        response = client.post('/api/projects', json=payload)
+
+        data = assert_error_response(response, 400)
+        assert data['error']['message'] == expected_message
+
+    def test_create_project_normalizes_selected_content_and_template_style(self, client):
+        response = client.post('/api/projects', json={
+            'creation_type': 'idea',
+            'idea_prompt': '  AI 产品发布会  ',
+            'outline_text': '不应写入当前模式',
+            'template_style': '  极简商务风  ',
+        })
+
+        created = assert_success_response(response, 201)['data']
+        project = assert_success_response(
+            client.get(f"/api/projects/{created['project_id']}")
+        )['data']
+        assert project['idea_prompt'] == 'AI 产品发布会'
+        assert project['outline_text'] is None
+        assert project['template_style'] == '极简商务风'
+
+    def test_create_project_rejects_non_text_template_style(self, client):
+        response = client.post('/api/projects', json={
+            'creation_type': 'idea',
+            'idea_prompt': 'AI 产品发布会',
+            'template_style': {'name': 'invalid'},
+        })
+
+        data = assert_error_response(response, 400)
+        assert 'template_style' in data['error']['message']
+
+    @pytest.mark.parametrize('template_style', ['', '   \n\t '])
+    def test_create_project_normalizes_empty_template_style_to_none(
+        self, client, template_style
+    ):
+        response = client.post('/api/projects', json={
+            'creation_type': 'idea',
+            'idea_prompt': 'AI 产品发布会',
+            'template_style': template_style,
+        })
+
+        created = assert_success_response(response, 201)['data']
+        project = assert_success_response(
+            client.get(f"/api/projects/{created['project_id']}")
+        )['data']
+        assert project['template_style'] is None
     
     def test_create_project_missing_type(self, client):
         """测试缺少creation_type参数"""
